@@ -6,10 +6,12 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 model comidas {
-  id        Int      @id @default(autoincrement())
-  nome      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int       @id @default(autoincrement())
+  nome       String    @db.VarChar(255)
+  created_at DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  updated_at DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamp(6)
+
   @@map("comidas")
 }
