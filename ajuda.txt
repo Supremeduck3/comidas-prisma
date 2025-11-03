@@ -1,0 +1,221 @@
+ instala o primsa -) npm install prisma @prisma/client
+
+ cria o .env e a a pasta prisma -) npx prisma init --datasource-provider postgresql
+
+
+
+
+
+
+
+
+
+
+ ----------------------------------------------------------------------------------------------------
+controlers corrigido
+
+
+ import * as comidaModel from "./../models/comidasModels.js";
+
+export const listarTodos = async (req, res) => {
+    try {
+        const comidas = await comidaModel.encontreTodos();
+
+        if (!comidas || comidas.length === 0) {
+            res.status(404).json({
+                total: 0,
+                mensagem: "Não há comidas na lista",
+                comidas
+            });
+        }
+
+        res.status(200).json({
+            total: comidas.length,
+            mensagem: "Lista de comidas",
+            comidas
+        });
+    } catch (error) {
+        res.status(500).json({
+            erro: 'Erro interno de servidor',
+            detalhes: error.message,
+            status: 500
+        });
+    }
+}
+
+export const listarUm = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const comida = await comidaModel.encontreUm(id);
+
+        if (!comida) {
+            return res.status(404).json({
+                erro: 'Comida não encontrada',
+                mensagem: 'Verifique o id da comida',
+                id: id
+            });
+        }
+
+        res.status(200).json({
+            mensagem: 'Comida encontrada',
+            comida
+        });
+    } catch (error) {
+        res.status(500).json({
+            erro: 'Erro interno de servidor',
+            detalhes: error.message,
+            status: 500
+        });
+    }
+}
+
+export const criar = async (req, res) => {
+    try {
+        const { nome, tipo, preco, descricao } = req.body;
+        const dado = req.body;
+
+        const camposObrigatorios = ["nome", "tipo", "preco", "descricao"];
+
+        const faltando = camposObrigatorios.filter((campo) => !dado[campo]);
+
+        if (faltando.length > 0) {
+            return res.status(400).json({
+              erro: `Os seguintes campos são obrigatórios: ${faltando.join(", ")}.`,
+            });
+          }
+
+        const novaComida = await comidaModel.criar(req.body);
+
+        res.status(201).json({
+            mensagem: 'Comida adicionada com sucesso!',
+            comida: novaComida
+        });
+    } catch (error) {
+        res.status(500).json({
+            erro: 'Erro interno de servidor',
+            detalhes: error.message,
+            status: 500
+        });
+    }
+}
+
+export const deletar = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const comidaExiste = await comidaModel.encontreUm(id);
+    
+        if (!comidaExiste) {
+            return res.status(404).json({
+                erro: 'Comida não encontrada com este id',
+                id: id
+            });
+        }
+
+        await comidaModel.deletar(id);
+
+        res.status(200).json({
+            mensagem: 'Comida apagada com sucesso!',
+            comidaRemovida: comidaExiste
+        });
+    } catch (error) {
+        res.status(500).json({
+            erro: 'Erro interno de servidor',
+            detalhes: error.message,
+            status: 500
+        });
+    }
+}
+
+export const atualizar = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const dados = req.body;
+
+        const comidaExiste = await comidaModel.encontreUm(id);
+
+        if (!comidaExiste) {
+            return res.status(404).json({
+                erro: 'Comida não existe!',
+                id: id
+            });
+        }
+
+        const comidaAtualizada = await comidaModel.atualizar(id, dados);
+
+        res.status(200).json({
+            mensagem: 'Comida atualizada com sucesso',
+            comida: comidaAtualizada
+        });
+    } catch (error) {
+        res.status(500).json({
+            erro: 'Erro interno de servidor',
+            detalhes: error.message,
+            status: 500
+        });
+    }
+}
+
+-----------------------------------------------------------------------------------------------------
+
+models corrigido
+
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+
+export const encontreTodos = async () => {
+    return await prisma.comida.findMany({
+        orderBy: { nome: "asc" }
+    });
+}
+
+export const encontreUm = async (id) => {
+    return await prisma.comida.findUnique({
+        where: { id: Number(id) }
+    });
+}
+
+export const criar = async (dado) => {
+    return await prisma.comida.create({
+        data: {
+            nome: dado.nome,
+            tipo: dado.tipo,
+            preco: dado.preco,
+            descricao: dado.descricao
+        }
+    });
+}
+
+export const deletar = async (id) => {
+    return await prisma.comida.delete({
+        where: { id: Number(id) }
+    });
+}
+
+export const atualizar = async (id, dado) => {
+    return await prisma.comida.update({
+        where: { id: Number(id) },
+        data: {
+            ...(dado.nome && {nome: dado.nome}),
+            ...(dado.tipo && {tipo: dado.tipo}),
+            ...(dado.preco && {preco: dado.preco}),
+            ...(dado.descricao && {descricao: dado.descricao})
+        }
+    });
+}
+
+-----------------------------------------------------------------------------------------------------
+
+routes corrigido
+
+import { Router } from "express";
+import * as comidaController from "./../controllers/comidasController.js";
+
+const router = Router();
+
+router.get("/", comidaController.listarTodos);
+router.get("/:id", comidaController.listarUm);
+router.post("/", comidaController.criar);
+router.delete("/:id", comidaController.deletar);
+router.put("/:id", comidaController.atualizar);
+
+export default router;
