@@ -2,13 +2,43 @@
 
  cria o .env e a a pasta prisma -) npx prisma init --datasource-provider postgresql
 
+modelo de tabela -) // prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Exemplo de modelo
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+cria o a tabela no prisma -) npx prisma migrate dev --name init
+
+npx prisma generate
+
+PARA USAR O postgresql PARA INSERIR NA TABELA 
+
+cria um database
 
 
 
 
+-----------------------------------------------------------------------------------------------------
+INSERT sintaxe 
 
-
-
+INSERT INTO nome_tabela (colunas que vc quer INSERIR)
+VALUES
+ (5, X COISA, ALGO)
 
 
  ----------------------------------------------------------------------------------------------------
