@@ -28,7 +28,7 @@ npx prisma generate
 
 PARA USAR O postgresql PARA INSERIR NA TABELA 
 
-cria um database
+cria um database CREATE DATABASE
 
 
 
